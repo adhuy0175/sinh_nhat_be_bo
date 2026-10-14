@@ -1,0 +1,6 @@
+{
+  "name": "sinh-nhat-em-yeu",
+  "description": "Trang web chúc mừng sinh nhật lãng mạn và ngọt ngào dành tặng em yêu ngày 21.10.2026.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
