@@ -39,12 +39,12 @@ export const Scene2CakeReveal: React.FC<Scene2CakeRevealProps> = ({ onScrollToMe
       <div className="max-w-2xl w-full mx-auto text-center">
         {/* Animated Main Heading */}
         <div className="space-y-3 mb-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-rose-100/70 text-rose-700 text-xs font-medium tracking-wide">
-            <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" />
-            <span>Ngày kỷ niệm ngọt ngào</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#F8DCE4]/60 text-[#6B4B50] text-xs font-medium tracking-wide border border-[#C98799]/30">
+            <Heart className="w-3.5 h-3.5 fill-[#C98799] text-[#C98799]" />
+            <span>{BIRTHDAY_CONFIG.scene2.badge}</span>
           </div>
 
-          <h2 className="text-3xl sm:text-5xl font-serif font-bold text-stone-900 tracking-tight leading-tight">
+          <h2 className="text-3xl sm:text-5xl font-serif font-bold text-[#6B4B50] tracking-tight leading-tight">
             {BIRTHDAY_CONFIG.scene2.title}
           </h2>
 
@@ -143,33 +143,33 @@ export const Scene2CakeReveal: React.FC<Scene2CakeRevealProps> = ({ onScrollToMe
 
               <button
                 onClick={handleBlowCandles}
-                className="group inline-flex items-center gap-2.5 px-8 py-3.5 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white rounded-full font-medium text-base shadow-lg shadow-rose-300/40 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                className="group inline-flex items-center gap-2.5 px-8 py-3.5 bg-gradient-to-r from-[#C98799] to-[#A86577] hover:from-[#A86577] hover:to-[#8E4E5F] text-white rounded-full font-medium text-base shadow-lg shadow-[#C98799]/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
                 <Flame className="w-5 h-5 text-amber-200 group-hover:scale-110 transition-transform" />
                 <span>{BIRTHDAY_CONFIG.scene2.candleButton}</span>
               </button>
             </div>
           ) : (
-            <div className="p-6 rounded-3xl glass-panel-warm border border-rose-200 shadow-xl max-w-lg mx-auto space-y-4 animate-float-gentle">
-              <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center mx-auto">
-                <Heart className="w-5 h-5 fill-rose-500" />
+            <div className="p-6 rounded-3xl glass-panel-warm border border-[#F8DCE4] shadow-xl max-w-lg mx-auto space-y-4 animate-float-gentle">
+              <div className="w-10 h-10 rounded-full bg-[#F8DCE4] text-[#C98799] flex items-center justify-center mx-auto">
+                <Heart className="w-5 h-5 fill-[#C98799]" />
               </div>
 
-              <p className="font-serif text-lg sm:text-xl text-stone-800 font-medium leading-relaxed">
+              <p className="font-serif text-lg sm:text-xl text-[#6B4B50] font-medium leading-relaxed">
                 "{BIRTHDAY_CONFIG.scene2.candleBlownMessage}"
               </p>
 
               <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
                 <button
                   onClick={onScrollToMemories}
-                  className="px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full text-sm font-medium shadow-md transition-all hover:scale-105"
+                  className="px-6 py-2.5 bg-gradient-to-r from-[#C98799] to-[#A86577] hover:from-[#A86577] hover:to-[#8E4E5F] text-white rounded-full text-sm font-medium shadow-md transition-all hover:scale-105 cursor-pointer"
                 >
                   Ngắm những khoảnh khắc đáng yêu của em 📸
                 </button>
 
                 <button
                   onClick={handleRelight}
-                  className="px-4 py-2 text-stone-500 hover:text-stone-700 hover:bg-stone-100/70 rounded-full text-xs transition-colors"
+                  className="px-4 py-2 text-stone-500 hover:text-[#6B4B50] hover:bg-[#F8DCE4]/40 rounded-full text-xs transition-colors cursor-pointer"
                 >
                   Thắp lại nến 🕯️
                 </button>

@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+@theme {
+  --color-blush: #F8DCE4;
+  --color-cream: #FFF8F0;
+  --color-dusty: #C98799;
+  --color-dusty-dark: #A86577;
+  --color-warm-brown: #6B4B50;
+  --color-warm-white: #FFFFFF;
+}
+
 @layer base {
   :root {
     --font-serif: "Playfair Display", Georgia, serif;
@@ -9,8 +18,8 @@
 
   body {
     font-family: var(--font-sans);
-    background-color: #fffaf7;
-    color: #443535;
+    background-color: #FFF8F0;
+    color: #6B4B50;
     overflow-x: hidden;
   }
 
@@ -29,7 +38,7 @@
     transform: translateY(0px) rotate(0deg);
   }
   50% {
-    transform: translateY(-12px) rotate(2deg);
+    transform: translateY(-8px) rotate(1.5deg);
   }
 }
 
@@ -40,17 +49,17 @@
     filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.8));
   }
   25% {
-    transform: scale(1.08, 0.96) translateY(-1px);
+    transform: scale(1.06, 0.96) translateY(-1px);
     opacity: 1;
     filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.9));
   }
   50% {
-    transform: scale(0.96, 1.04) translateY(1px);
+    transform: scale(0.96, 1.03) translateY(1px);
     opacity: 0.9;
     filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.7));
   }
   75% {
-    transform: scale(1.03, 1) translateY(-0.5px);
+    transform: scale(1.02, 1) translateY(-0.5px);
     opacity: 0.98;
     filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.85));
   }
@@ -58,82 +67,108 @@
 
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 25px rgba(244, 63, 94, 0.25), 0 0 50px rgba(251, 191, 36, 0.15);
+    box-shadow: 0 0 20px rgba(201, 135, 153, 0.2), 0 0 40px rgba(248, 220, 228, 0.15);
   }
   50% {
-    box-shadow: 0 0 40px rgba(244, 63, 94, 0.45), 0 0 75px rgba(251, 191, 36, 0.3);
+    box-shadow: 0 0 35px rgba(201, 135, 153, 0.35), 0 0 60px rgba(248, 220, 228, 0.3);
   }
 }
 
 @keyframes softSparkle {
   0%, 100% {
-    opacity: 0.2;
-    transform: scale(0.8);
+    opacity: 0.25;
+    transform: scale(0.85);
   }
   50% {
     opacity: 0.9;
-    transform: scale(1.2);
+    transform: scale(1.15);
+  }
+}
+
+@keyframes kenBurnsSubtle {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.04) translate(-0.5%, -0.5%);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
   }
 }
 
 .animate-float-gentle {
-  animation: floatGentle 5s ease-in-out infinite;
+  animation: floatGentle 6s ease-in-out infinite;
 }
 
 .animate-candle-flame {
-  animation: candleFlicker 1.8s ease-in-out infinite;
+  animation: candleFlicker 2s ease-in-out infinite;
   transform-origin: bottom center;
 }
 
 .animate-pulse-glow {
-  animation: pulseGlow 3s ease-in-out infinite;
+  animation: pulseGlow 3.5s ease-in-out infinite;
 }
 
 .animate-sparkle {
-  animation: softSparkle 2.5s ease-in-out infinite;
+  animation: softSparkle 2.8s ease-in-out infinite;
 }
 
-/* Glassmorphism styling */
+.animate-ken-burns {
+  animation: kenBurnsSubtle 12s ease-in-out infinite alternate;
+}
+
+/* Warm Romantic Glassmorphism */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(248, 220, 228, 0.7);
 }
 
 .glass-panel-warm {
-  background: rgba(255, 252, 248, 0.85);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(253, 230, 238, 0.6);
+  background: rgba(255, 248, 240, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(248, 220, 228, 0.75);
 }
 
 .glass-dark {
-  background: rgba(30, 20, 25, 0.85);
+  background: rgba(31, 22, 25, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(244, 63, 94, 0.2);
+  border: 1px solid rgba(201, 135, 153, 0.25);
 }
 
-/* Washi tape decoration */
+/* Washi tape decoration with delicate dusty rose and blush tones */
 .washi-tape {
-  background: rgba(255, 240, 220, 0.75);
-  border-left: 2px dashed rgba(220, 190, 160, 0.4);
-  border-right: 2px dashed rgba(220, 190, 160, 0.4);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: rgba(248, 220, 228, 0.8);
+  border-left: 2px dashed rgba(201, 135, 153, 0.45);
+  border-right: 2px dashed rgba(201, 135, 153, 0.45);
+  box-shadow: 0 1px 3px rgba(107, 75, 80, 0.08);
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar with soft blush tones */
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #FFF9F9;
+  background: #FFF8F0;
 }
 ::-webkit-scrollbar-thumb {
-  background: #FBCFE8;
+  background: #F8DCE4;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #F472B6;
+  background: #C98799;
+}
+
+/* Accessibility: respect user's reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

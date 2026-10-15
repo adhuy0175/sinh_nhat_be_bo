@@ -2,12 +2,15 @@ import { BIRTHDAY_CONFIG } from '../config/birthdayConfig';
 
 /**
  * Romantic Audio Engine:
- * - Plays custom or default MP3 audio tracks
- * - Immediate and safe audio track replacement with full race condition protection
- * - Automatic blob URL cleanup
- * - Session-persistent track selection
- * - Acoustic music box / piano synthesizer fallback
- * - Special celebratory sound effects (sparkle, candle blow, heart chime, envelope)
+ * - Single centralized audio controller for the entire application.
+ * - Manages HTMLAudioElement playback with immediate track replacement.
+ * - Handles stopping default audio, stopping synthesizer oscillators, and stopping fallback loops.
+ * - Prevents race conditions during asynchronous play/pause/switch operations.
+ * - Safe blob URL cleanup and session memory.
+ * - Dedicated Web Audio synthesizer with clean disconnectable master gain.
+ * - Full debug logging for all required audio events:
+ *   [MUSIC_SOURCE_CHANGED], [DEFAULT_AUDIO_STOPPED], [SYNTHESIZER_STOPPED],
+ *   [CUSTOM_AUDIO_STARTED], [AUDIO_PLAYBACK_ERROR].
  */
 
 interface SessionTrackData {
@@ -17,17 +20,20 @@ interface SessionTrackData {
   isCustom: boolean;
 }
 
-const SESSION_STORAGE_KEY = 'romantic_birthday_audio_track_v1';
+const SESSION_STORAGE_KEY = 'romantic_birthday_audio_track_v2';
 
 class RomanticAudioEngine {
   private audioCtx: AudioContext | null = null;
-  private isPlaying = false;
-  private isMuted = false;
-  private volume = 0.7;
-  private audioElement: HTMLAudioElement | null = null;
+  private synthMasterGain: GainNode | null = null;
+  private activeOscillators: Set<{ osc: OscillatorNode; gain: GainNode }> = new Set();
   private synthTimer: number | null = null;
   private step = 0;
   private usingSynth = false;
+
+  private audioElement: HTMLAudioElement | null = null;
+  private isPlaying = false;
+  private isMuted = false;
+  private volume = 0.7;
   private listeners: Array<() => void> = [];
 
   // Track info & state
@@ -52,19 +58,22 @@ class RomanticAudioEngine {
       const saved = sessionStorage.getItem(SESSION_STORAGE_KEY);
       if (saved) {
         const data: SessionTrackData = JSON.parse(saved);
-        // Note: Blob URLs do not survive full reload, only remember if valid URL
         if (data.src && !data.src.startsWith('blob:')) {
           this.currentTrackSrc = data.src;
           this.currentTrackTitle = data.title || BIRTHDAY_CONFIG.music.title;
           this.currentTrackArtist = data.artist || BIRTHDAY_CONFIG.music.artist;
           this.isCustom = Boolean(data.isCustom);
         } else if (data.isCustom) {
-          // If was custom blob, title remembered but fallback src to default
+          // If previous session had a custom blob, keep metadata placeholder
           this.currentTrackTitle = data.title || 'Bản nhạc tùy chọn';
+          this.currentTrackArtist = data.artist || 'Tệp MP3 đã tải lên';
+          // Blob URLs are invalid across page reloads, fallback to default src
+          this.currentTrackSrc = BIRTHDAY_CONFIG.music.src;
+          this.isCustom = false;
         }
       }
     } catch {
-      // Ignore storage error
+      // Ignore storage read error
     }
   }
 
@@ -79,7 +88,7 @@ class RomanticAudioEngine {
       };
       sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data));
     } catch {
-      // Ignore
+      // Ignore storage write error
     }
   }
 
@@ -100,6 +109,7 @@ class RomanticAudioEngine {
     });
   }
 
+  // Getters
   public getIsPlaying(): boolean {
     return this.isPlaying;
   }
@@ -128,6 +138,10 @@ class RomanticAudioEngine {
     return this.isCustom;
   }
 
+  public isUsingSynthesizer(): boolean {
+    return this.usingSynth;
+  }
+
   public getPlaybackError(): string | null {
     return this.playbackError;
   }
@@ -137,14 +151,83 @@ class RomanticAudioEngine {
     this.notify();
   }
 
-  public isUsingSynthesizer(): boolean {
-    return this.usingSynth;
+  /**
+   * Completely pauses, resets, and tears down the active HTMLAudioElement.
+   * Ensures no background playback or decoding continues.
+   */
+  private teardownCurrentAudioElement(): void {
+    if (!this.audioElement) return;
+
+    const audio = this.audioElement;
+    this.audioElement = null; // Unbind reference immediately
+
+    try {
+      audio.onended = null;
+      audio.onerror = null;
+      audio.onplay = null;
+      audio.onpause = null;
+      audio.oncanplay = null;
+      audio.pause();
+      audio.currentTime = 0;
+      audio.src = '';
+      audio.removeAttribute('src');
+      audio.load();
+    } catch (err) {
+      console.warn('Error tearing down previous audio element:', err);
+    }
+
+    console.log('[DEFAULT_AUDIO_STOPPED] Previous audio element stopped, reset, and detached');
+  }
+
+  /**
+   * Stops synthesizer, disconnects all active oscillator nodes, and clears master gain.
+   */
+  public stopSynth(): void {
+    const hadActiveSynth = this.usingSynth || this.synthTimer !== null || this.activeOscillators.size > 0;
+    this.usingSynth = false;
+
+    if (this.synthTimer !== null) {
+      window.clearTimeout(this.synthTimer);
+      this.synthTimer = null;
+    }
+
+    // Immediately ramp master synth gain to 0 and disconnect
+    if (this.synthMasterGain && this.audioCtx) {
+      try {
+        const now = this.audioCtx.currentTime;
+        this.synthMasterGain.gain.cancelScheduledValues(now);
+        this.synthMasterGain.gain.setValueAtTime(0, now);
+        this.synthMasterGain.disconnect();
+      } catch {
+        // Ignore disconnect error
+      }
+      this.synthMasterGain = null;
+    }
+
+    // Stop and disconnect every active oscillator immediately
+    this.activeOscillators.forEach(({ osc, gain }) => {
+      try {
+        osc.stop(0);
+        osc.disconnect();
+        gain.disconnect();
+      } catch {
+        // Ignore oscillator stop error if already ended
+      }
+    });
+    this.activeOscillators.clear();
+
+    if (hadActiveSynth) {
+      console.log('[SYNTHESIZER_STOPPED] All synthesizer oscillators stopped and master gain disconnected');
+    }
   }
 
   /**
    * Dedicated method to safely replace the active audio track with a new source.
-   * Handles stopping current audio, stopping synth, cleaning up old blob URLs,
-   * setting the new source, resetting time, loading, and playing immediately.
+   * - Stops default audio and synthesizer.
+   * - Disconnects all oscillators and cancels timeouts.
+   * - Cleans up old blob URLs.
+   * - Creates a clean HTMLAudioElement instance.
+   * - Starts playback with race-condition prevention.
    */
   public async replaceAudioTrack(
     newSrc: string,
@@ -154,18 +237,21 @@ class RomanticAudioEngine {
     const currentOp = ++this.operationToken;
     this.playbackError = null;
 
+    const previousSrc = this.currentTrackSrc;
+    const isNewCustom = newSrc !== BIRTHDAY_CONFIG.music.src;
+
+    console.log('[MUSIC_SOURCE_CHANGED]', {
+      from: previousSrc,
+      to: newSrc,
+      isCustom: isNewCustom,
+      title: title || 'Custom Track',
+    });
+
     // 1. Immediately stop synthesizer fallback if running
     this.stopSynth();
 
-    // 2. Immediately stop & pause current audio element
-    if (this.audioElement) {
-      try {
-        this.audioElement.pause();
-        this.audioElement.currentTime = 0;
-      } catch {
-        // Ignore pause error
-      }
-    }
+    // 2. Immediately stop, reset, and teardown previous HTMLAudioElement
+    this.teardownCurrentAudioElement();
     this.isPlaying = false;
     this.notify();
 
@@ -185,49 +271,49 @@ class RomanticAudioEngine {
 
     // 4. Update track info & session state
     this.currentTrackSrc = newSrc;
-    this.currentTrackTitle = title || (newSrc === BIRTHDAY_CONFIG.music.src ? BIRTHDAY_CONFIG.music.title : 'Bản nhạc bạn chọn');
-    this.currentTrackArtist = artist || (newSrc === BIRTHDAY_CONFIG.music.src ? BIRTHDAY_CONFIG.music.artist : 'Tệp MP3 cá nhân');
-    this.isCustom = newSrc !== BIRTHDAY_CONFIG.music.src;
+    this.currentTrackTitle =
+      title || (isNewCustom ? 'Bản nhạc bạn chọn' : BIRTHDAY_CONFIG.music.title);
+    this.currentTrackArtist =
+      artist || (isNewCustom ? 'Tệp MP3 tải lên' : BIRTHDAY_CONFIG.music.artist);
+    this.isCustom = isNewCustom;
     this.saveToSession();
 
     // 5. Ensure audio context is ready
     this.initAudioContext();
 
-    // 6. Setup or reuse audio element
-    if (!this.audioElement) {
-      this.audioElement = new Audio();
-    }
-
-    const audio = this.audioElement;
+    // 6. Create a brand new clean HTMLAudioElement
+    const audio = new Audio();
     audio.loop = true;
     audio.volume = this.volume;
     audio.muted = this.isMuted;
+    audio.preload = 'auto';
 
-    // Remove any stale event listeners by re-assigning handlers
     audio.onended = () => {
-      // Should loop, but if ended
+      // Loop is true, but handle unexpected finish
+      if (currentOp !== this.operationToken) return;
       this.isPlaying = false;
       this.notify();
     };
 
     audio.onerror = () => {
       if (currentOp !== this.operationToken) return;
+      console.error('[AUDIO_PLAYBACK_ERROR]', 'Audio element error event for src:', newSrc);
       this.isPlaying = false;
-      this.playbackError = 'Không thể phát định dạng âm thanh này. Vui lòng thử lại với file MP3 chuẩn.';
+      this.playbackError =
+        'Không thể phát tệp âm thanh này. Vui lòng thử lại với một file MP3 hoặc WAV hợp lệ.';
       this.notify();
     };
 
-    // Update source and reload
     audio.src = newSrc;
-    audio.load();
+    this.audioElement = audio;
 
-    // 7. Start playing immediately (within user gesture call stack)
+    // 7. Start playing immediately inside the user-interaction execution frame
     try {
       this.pendingPlayPromise = audio.play();
       await this.pendingPlayPromise;
       this.pendingPlayPromise = null;
 
-      // Check for race conditions if another replace occurred while waiting
+      // If another operation took over while waiting, pause this one
       if (currentOp !== this.operationToken) {
         audio.pause();
         return false;
@@ -236,6 +322,15 @@ class RomanticAudioEngine {
       this.isPlaying = true;
       this.usingSynth = false;
       this.playbackError = null;
+
+      if (this.isCustom) {
+        console.log('[CUSTOM_AUDIO_STARTED]', {
+          src: newSrc,
+          title: this.currentTrackTitle,
+          artist: this.currentTrackArtist,
+        });
+      }
+
       this.notify();
       return true;
     } catch (err: unknown) {
@@ -244,20 +339,21 @@ class RomanticAudioEngine {
 
       const error = err as Error;
       if (error && error.name === 'AbortError') {
-        // Interrupted by another pause/replace action, not a real playback failure
+        // Interrupted by another replace or pause, not a fatal failure
         return false;
       }
 
-      console.warn('Audio play rejection:', err);
+      console.error('[AUDIO_PLAYBACK_ERROR]', 'Audio play rejection for src:', newSrc, err);
       this.isPlaying = false;
-      this.playbackError = 'Không thể phát tệp âm thanh này. Trình duyệt có thể đã chặn hoặc tệp bị hỏng.';
+      this.playbackError =
+        'Không thể phát nhạc. Trình duyệt đã chặn tự động phát hoặc tệp bị hỏng. Hãy bấm nút Phát nhạc để thử lại.';
       this.notify();
       return false;
     }
   }
 
   /**
-   * Reverts track to the permanent default music asset
+   * Reverts track to the permanent default music asset (/music/the-gioi-cua-anh.mp3)
    */
   public async revertToDefault(): Promise<boolean> {
     return this.replaceAudioTrack(
@@ -268,14 +364,19 @@ class RomanticAudioEngine {
   }
 
   /**
-   * Starts playing the current audio track, with fallback if not already playing.
+   * Starts playing the active audio track.
+   * If a custom track is loaded, it retains absolute priority over default music.
    */
   public async startAudio(mp3Src?: string): Promise<void> {
-    const targetSrc = mp3Src || this.currentTrackSrc;
+    // If a custom track is active and an outside caller passed the default src, keep custom track
+    let targetSrc = mp3Src || this.currentTrackSrc;
+    if (this.isCustom && mp3Src === BIRTHDAY_CONFIG.music.src) {
+      targetSrc = this.currentTrackSrc;
+    }
 
-    // If different track requested or previous audio stopped, delegate to replace
+    // If source differs or audio element not initialized, route to replaceAudioTrack
     if (targetSrc !== this.currentTrackSrc || !this.audioElement) {
-      await this.replaceAudioTrack(targetSrc);
+      await this.replaceAudioTrack(targetSrc, this.currentTrackTitle, this.currentTrackArtist);
       return;
     }
 
@@ -284,7 +385,7 @@ class RomanticAudioEngine {
     this.initAudioContext();
     const currentOp = ++this.operationToken;
 
-    // Stop synth before audio
+    // Ensure synth is stopped before resuming audio
     this.stopSynth();
 
     const audio = this.audioElement;
@@ -309,12 +410,15 @@ class RomanticAudioEngine {
       const error = err as Error;
       if (error && error.name === 'AbortError') return;
 
-      // Fall back to synthesizer if configured and default track failed
-      if (BIRTHDAY_CONFIG.music.useSynthesizerFallback && !this.isCustom) {
+      console.error('[AUDIO_PLAYBACK_ERROR]', 'Playback failed in startAudio():', err);
+
+      // Rule 7: Do NOT automatically switch to synthesizer fallback after a custom MP3 is selected!
+      if (!this.isCustom && BIRTHDAY_CONFIG.music.useSynthesizerFallback) {
         this.startSynth();
       } else {
         this.isPlaying = false;
-        this.playbackError = 'Không thể phát nhạc. Vui lòng bấm vào nút phát nhạc để cấp quyền cho trình duyệt.';
+        this.playbackError =
+          'Không thể phát nhạc. Vui lòng bấm vào biểu tượng đĩa nhạc để cho phép trình duyệt phát.';
         this.notify();
       }
     }
@@ -328,7 +432,7 @@ class RomanticAudioEngine {
       try {
         this.audioElement.pause();
       } catch {
-        // Ignore
+        // Ignore pause error
       }
     }
 
@@ -365,14 +469,6 @@ class RomanticAudioEngine {
     this.notify();
   }
 
-  private stopSynth() {
-    this.usingSynth = false;
-    if (this.synthTimer !== null) {
-      window.clearTimeout(this.synthTimer);
-      this.synthTimer = null;
-    }
-  }
-
   private initAudioContext() {
     try {
       if (!this.audioCtx) {
@@ -397,6 +493,11 @@ class RomanticAudioEngine {
         this.audioCtx.resume();
       }
 
+      if (!this.synthMasterGain) {
+        this.synthMasterGain = this.audioCtx.createGain();
+        this.synthMasterGain.connect(this.audioCtx.destination);
+      }
+
       const now = this.audioCtx.currentTime;
       const osc = this.audioCtx.createOscillator();
       const oscHarmonic = this.audioCtx.createOscillator();
@@ -414,7 +515,7 @@ class RomanticAudioEngine {
       oscSub.type = 'sine';
       oscSub.frequency.setValueAtTime(freq * 0.5, now);
 
-      // Warm low-pass filter to sound acoustic and intimate
+      // Warm low-pass filter
       filter.type = 'lowpass';
       filter.frequency.setValueAtTime(2600, now);
       filter.Q.setValueAtTime(1.2, now);
@@ -431,30 +532,59 @@ class RomanticAudioEngine {
       }
 
       gain.connect(filter);
-      filter.connect(this.audioCtx.destination);
+      filter.connect(this.synthMasterGain);
+
+      // Track active oscillators for immediate cleanup
+      const tracked1 = { osc, gain };
+      const tracked2 = { osc: oscHarmonic, gain };
+      this.activeOscillators.add(tracked1);
+      this.activeOscillators.add(tracked2);
+
+      osc.onended = () => {
+        this.activeOscillators.delete(tracked1);
+      };
+      oscHarmonic.onended = () => {
+        this.activeOscillators.delete(tracked2);
+      };
 
       osc.start(now);
       oscHarmonic.start(now);
-      if (freq > 300) oscSub.start(now);
+      if (freq > 300) {
+        const tracked3 = { osc: oscSub, gain };
+        this.activeOscillators.add(tracked3);
+        oscSub.onended = () => {
+          this.activeOscillators.delete(tracked3);
+        };
+        oscSub.start(now);
+        oscSub.stop(now + duration + 0.1);
+      }
 
       osc.stop(now + duration + 0.1);
       oscHarmonic.stop(now + duration + 0.1);
-      if (freq > 300) oscSub.stop(now + duration + 0.1);
     } catch {
       // Ignore audio glitch
     }
   }
 
   private startSynth() {
+    // Never start synth if custom track is active
+    if (this.isCustom) return;
+
     this.initAudioContext();
     this.stopSynth();
+
+    if (!this.audioCtx) return;
+
+    this.synthMasterGain = this.audioCtx.createGain();
+    this.synthMasterGain.connect(this.audioCtx.destination);
+
     this.usingSynth = true;
     this.isPlaying = true;
     this.notify();
 
-    // Sweet romantic melody combining Happy Birthday motif with River Flows in You / Thế Giới Của Anh chords
+    // Sweet romantic melody combining Happy Birthday motif with acoustic chords
     const melody = [
-      // Section A: Romantic arpeggio (C Major / G / Am / F)
+      // Section A: Romantic arpeggio
       { freq: 261.63, dur: 2.4, bass: true }, // C4
       { freq: 523.25, dur: 1.2 },             // C5
       { freq: 659.25, dur: 1.2 },             // E5
@@ -479,7 +609,7 @@ class RomanticAudioEngine {
       { freq: 523.25, dur: 1.8 },             // C5
       { freq: 493.88, dur: 1.0 },             // B4
 
-      // Section B: Delicate Happy Birthday Music Box Phrase
+      // Section B: Happy Birthday Phrase
       { freq: 261.63, dur: 0.8 },             // C4
       { freq: 261.63, dur: 0.8 },             // C4
       { freq: 293.66, dur: 1.4 },             // D4
@@ -511,7 +641,10 @@ class RomanticAudioEngine {
     ];
 
     const tick = () => {
-      if (!this.isPlaying || !this.usingSynth) return;
+      if (!this.isPlaying || !this.usingSynth || this.isCustom) {
+        this.stopSynth();
+        return;
+      }
 
       const note = melody[this.step % melody.length];
       const gain = note.bass ? 0.22 : 0.16;
@@ -524,6 +657,10 @@ class RomanticAudioEngine {
     tick();
   }
 
+  /**
+   * Special celebration sound effects (envelope open, candle blow, chime, heart).
+   * Routed through independent temporary nodes so background music is never touched.
+   */
   public playSpecialEffect(type: 'sparkle' | 'blow' | 'heart' | 'envelope') {
     this.initAudioContext();
     if (!this.audioCtx || this.isMuted) return;
@@ -535,7 +672,7 @@ class RomanticAudioEngine {
         const notes = [587.33, 783.99, 987.77, 1174.66, 1318.51];
         notes.forEach((freq, idx) => {
           setTimeout(() => {
-            this.playChime(freq, 0.8, 0.12);
+            this.playEffectChime(freq, 0.8, 0.12);
           }, idx * 75);
         });
       } else if (type === 'blow') {
@@ -569,10 +706,35 @@ class RomanticAudioEngine {
         const chord = [739.99, 880.0, 1174.66];
         chord.forEach((freq, i) => {
           setTimeout(() => {
-            this.playChime(freq, 1.4, 0.15);
+            this.playEffectChime(freq, 1.4, 0.15);
           }, i * 60);
         });
       }
+    } catch {
+      // Ignore
+    }
+  }
+
+  private playEffectChime(freq: number, duration: number, gainValue = 0.15) {
+    if (!this.audioCtx || this.isMuted) return;
+
+    try {
+      const now = this.audioCtx.currentTime;
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(gainValue * this.volume, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + duration + 0.1);
     } catch {
       // Ignore
     }

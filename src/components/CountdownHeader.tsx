@@ -66,27 +66,27 @@ export const CountdownHeader: React.FC<CountdownHeaderProps> = ({
   return (
     <header className="relative w-full z-30 pt-4 px-4 sm:px-6">
       <div className="max-w-4xl mx-auto">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl glass-panel-warm border border-rose-100 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl glass-panel-warm border border-[#F8DCE4] shadow-sm">
           {/* Status message */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 shrink-0">
-              {showCelebrationBanner ? <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> : <Calendar className="w-4 h-4" />}
+            <div className="w-8 h-8 rounded-full bg-[#F8DCE4] flex items-center justify-center text-[#C98799] shrink-0">
+              {showCelebrationBanner ? <Heart className="w-4 h-4 fill-[#C98799] text-[#C98799]" /> : <Calendar className="w-4 h-4" />}
             </div>
 
             <div>
               {showCelebrationBanner ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs uppercase tracking-wider font-semibold text-rose-600">
+                  <span className="text-xs uppercase tracking-wider font-semibold text-[#C98799]">
                     Hôm nay là ngày đặc biệt!
                   </span>
                   <span className="text-xs text-stone-400">·</span>
-                  <span className="text-xs text-stone-600">
+                  <span className="text-xs text-[#6B4B50]">
                     21 tháng 10 năm 2026
                   </span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs uppercase tracking-wider font-semibold text-stone-600">
+                  <span className="text-xs uppercase tracking-wider font-semibold text-[#6B4B50]">
                     Đếm ngược sinh nhật em yêu
                   </span>
                   <span className="text-xs text-stone-400">·</span>
@@ -94,7 +94,7 @@ export const CountdownHeader: React.FC<CountdownHeaderProps> = ({
                 </div>
               )}
 
-              <p className="text-xs sm:text-sm text-stone-700 font-medium">
+              <p className="text-xs sm:text-sm text-[#6B4B50] font-medium">
                 {showCelebrationBanner
                   ? `Chúc mừng sinh nhật ${BIRTHDAY_CONFIG.couple.girlfriendName}! Chúc em một ngày ngập tràn yêu thương ✨`
                   : 'Đang đếm từng phút giây đến ngày thiên thần của anh chào đời ✨'}
@@ -105,30 +105,30 @@ export const CountdownHeader: React.FC<CountdownHeaderProps> = ({
           {/* Time Counter or Birthday Badge */}
           <div className="flex items-center gap-2 shrink-0">
             {!showCelebrationBanner ? (
-              <div className="flex items-center gap-1.5 font-mono text-xs tabular-nums text-rose-700 bg-rose-50/80 px-3 py-1.5 rounded-xl border border-rose-200/60">
+              <div className="flex items-center gap-1.5 font-mono text-xs tabular-nums text-[#C98799] bg-[#FFF8F0] px-3 py-1.5 rounded-xl border border-[#F8DCE4]">
                 <div className="text-center">
-                  <span className="font-bold text-sm">{timeLeft.days}</span>
+                  <span className="font-bold text-sm text-[#C98799]">{timeLeft.days}</span>
                   <span className="text-[10px] text-stone-400 block -mt-0.5">ngày</span>
                 </div>
-                <span className="text-rose-300 font-sans pb-1">:</span>
+                <span className="text-[#C98799]/50 font-sans pb-1">:</span>
                 <div className="text-center">
-                  <span className="font-bold text-sm">{String(timeLeft.hours).padStart(2, '0')}</span>
+                  <span className="font-bold text-sm text-[#6B4B50]">{String(timeLeft.hours).padStart(2, '0')}</span>
                   <span className="text-[10px] text-stone-400 block -mt-0.5">giờ</span>
                 </div>
-                <span className="text-rose-300 font-sans pb-1">:</span>
+                <span className="text-[#C98799]/50 font-sans pb-1">:</span>
                 <div className="text-center">
-                  <span className="font-bold text-sm">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                  <span className="font-bold text-sm text-[#6B4B50]">{String(timeLeft.minutes).padStart(2, '0')}</span>
                   <span className="text-[10px] text-stone-400 block -mt-0.5">phút</span>
                 </div>
-                <span className="text-rose-300 font-sans pb-1">:</span>
+                <span className="text-[#C98799]/50 font-sans pb-1">:</span>
                 <div className="text-center">
-                  <span className="font-bold text-sm">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                  <span className="font-bold text-sm text-amber-600">{String(timeLeft.seconds).padStart(2, '0')}</span>
                   <span className="text-[10px] text-stone-400 block -mt-0.5">giây</span>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 text-xs text-rose-600 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200/80 font-medium">
-                <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+              <div className="flex items-center gap-1.5 text-xs text-[#C98799] bg-[#F8DCE4]/60 px-3 py-1.5 rounded-xl border border-[#F8DCE4] font-medium">
+                <Sparkles className="w-3.5 h-3.5 text-[#C98799]" />
                 <span>21.10.2026 🎉</span>
               </div>
             )}
@@ -136,10 +136,10 @@ export const CountdownHeader: React.FC<CountdownHeaderProps> = ({
             {/* Preview mode toggle for boyfriend */}
             <button
               onClick={onTogglePreviewMode}
-              className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${
+              className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors cursor-pointer ${
                 previewBirthdayMode
-                  ? 'bg-rose-100 text-rose-700 border-rose-300 font-medium'
-                  : 'bg-white/80 hover:bg-rose-50 text-stone-500 border-stone-200'
+                  ? 'bg-[#F8DCE4] text-[#C98799] border-[#C98799]/40 font-medium'
+                  : 'bg-white/80 hover:bg-[#F8DCE4]/40 text-[#6B4B50] border-[#F8DCE4]'
               }`}
               title="Chuyển đổi trạng thái xem trước ngày sinh nhật"
             >

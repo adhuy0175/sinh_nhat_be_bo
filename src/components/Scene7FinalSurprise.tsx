@@ -102,7 +102,7 @@ export const Scene7FinalSurprise: React.FC<Scene7FinalSurpriseProps> = ({ onRepl
             step >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
         >
-          <span className="font-handwriting text-2xl sm:text-3xl text-rose-500 font-medium">
+          <span className="font-handwriting text-2xl sm:text-3xl text-[#C98799] font-medium">
             {scene.question}
           </span>
         </div>
@@ -113,11 +113,11 @@ export const Scene7FinalSurprise: React.FC<Scene7FinalSurpriseProps> = ({ onRepl
             step >= 2 ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
           }`}
         >
-          <div className="p-6 sm:p-8 rounded-3xl glass-panel-warm border-2 border-rose-200/90 shadow-2xl max-w-2xl mx-auto">
-            <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center mx-auto mb-3">
-              <Heart className="w-6 h-6 fill-rose-500 text-rose-500 animate-pulse" />
+          <div className="p-6 sm:p-8 rounded-3xl glass-panel-warm border-2 border-[#F8DCE4] shadow-2xl max-w-2xl mx-auto">
+            <div className="w-12 h-12 rounded-full bg-[#F8DCE4] flex items-center justify-center mx-auto mb-3">
+              <Heart className="w-6 h-6 fill-[#C98799] text-[#C98799] animate-pulse" />
             </div>
-            <h2 className="text-2xl sm:text-4xl font-serif font-bold text-stone-900 leading-snug px-2">
+            <h2 className="text-2xl sm:text-4xl font-serif font-bold text-[#6B4B50] leading-snug px-2">
               "{scene.finalWish}"
             </h2>
           </div>
@@ -130,12 +130,12 @@ export const Scene7FinalSurprise: React.FC<Scene7FinalSurpriseProps> = ({ onRepl
           }`}
         >
           <div className="inline-block relative">
-            <h1 className="text-4xl sm:text-6xl font-serif font-black tracking-tight bg-gradient-to-r from-rose-600 via-pink-600 to-amber-600 bg-clip-text text-transparent drop-shadow-sm">
+            <h1 className="text-4xl sm:text-6xl font-serif font-black tracking-tight bg-gradient-to-r from-[#C98799] via-[#A86577] to-[#8E4E5F] bg-clip-text text-transparent drop-shadow-sm">
               {scene.birthdayGreeting}
             </h1>
             <div className="flex items-center justify-center gap-2 mt-2">
               <Sparkles className="w-4 h-4 text-amber-400" />
-              <p className="font-serif italic text-base sm:text-lg text-stone-600">
+              <p className="font-serif italic text-base sm:text-lg text-[#6B4B50]/80">
                 {scene.dateGreeting}
               </p>
               <Sparkles className="w-4 h-4 text-amber-400" />
@@ -147,7 +147,7 @@ export const Scene7FinalSurprise: React.FC<Scene7FinalSurpriseProps> = ({ onRepl
             {/* Fireworks Button */}
             <button
               onClick={handleFireFireworks}
-              className="group relative inline-flex items-center gap-2.5 px-7 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-full font-medium text-base shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="group relative inline-flex items-center gap-2.5 px-7 py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-full font-medium text-base shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <span className="text-2xl animate-bounce">🎆</span>
               <span>{scene.fireworksButton}</span>
@@ -161,7 +161,7 @@ export const Scene7FinalSurprise: React.FC<Scene7FinalSurpriseProps> = ({ onRepl
             {/* Hug Button */}
             <button
               onClick={handleReceiveHug}
-              className="group relative inline-flex items-center gap-2.5 px-8 py-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white rounded-full font-medium text-base shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="group relative inline-flex items-center gap-2.5 px-8 py-4 bg-gradient-to-r from-[#C98799] to-[#A86577] hover:from-[#A86577] hover:to-[#8E4E5F] text-white rounded-full font-medium text-base shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <span className="text-2xl">🤗</span>
               <span>{scene.hugButtonText}</span>

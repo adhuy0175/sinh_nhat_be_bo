@@ -40,12 +40,12 @@ export const Scene5SecretLoveLetter: React.FC = () => {
     <section id="scene-letter" className="relative py-20 px-4 sm:px-6 max-w-4xl mx-auto">
       {/* Heading */}
       <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-rose-100/70 text-rose-700 text-xs font-medium">
-          <Mail className="w-3.5 h-3.5" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#F8DCE4]/60 text-[#6B4B50] text-xs font-medium border border-[#C98799]/30">
+          <Mail className="w-3.5 h-3.5 text-[#C98799]" />
           <span>Thư tay đặc biệt</span>
         </div>
 
-        <h2 className="text-3xl sm:text-4xl font-serif font-bold text-stone-900 tracking-tight">
+        <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#6B4B50] tracking-tight">
           {letter.title}
         </h2>
 
@@ -59,32 +59,32 @@ export const Scene5SecretLoveLetter: React.FC = () => {
         <div className="flex flex-col items-center justify-center my-6">
           <div
             onClick={handleOpenLetter}
-            className="group relative w-80 sm:w-96 h-56 bg-gradient-to-br from-[#FFF5ED] via-[#FFEBEF] to-[#FEDFE5] rounded-3xl p-6 shadow-2xl border-2 border-rose-200 flex flex-col items-center justify-between cursor-pointer hover:scale-105 transition-all duration-300"
+            className="group relative w-80 sm:w-96 h-56 bg-gradient-to-br from-[#FFF8F0] via-[#F8DCE4] to-[#FFF8F0] rounded-3xl p-6 shadow-2xl border-2 border-[#F8DCE4] flex flex-col items-center justify-between cursor-pointer hover:scale-105 transition-all duration-300"
           >
             {/* Soft pulsing glow */}
-            <div className="absolute -inset-2 rounded-3xl bg-rose-300/30 blur-xl opacity-60 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute -inset-2 rounded-3xl bg-[#C98799]/20 blur-xl opacity-60 group-hover:opacity-100 transition-opacity" />
 
             {/* Vintage stamp in top corner */}
             <div className="self-end z-10">
-              <div className="w-12 h-14 border-2 border-dashed border-rose-300 rounded-lg p-1.5 flex flex-col items-center justify-center bg-white/70 rotate-3 shadow-sm">
-                <span className="text-[9px] font-mono text-rose-400 font-bold">21.10</span>
-                <Heart className="w-4 h-4 text-rose-500 fill-rose-300" />
+              <div className="w-12 h-14 border-2 border-dashed border-[#C98799]/50 rounded-lg p-1.5 flex flex-col items-center justify-center bg-white/80 rotate-3 shadow-sm">
+                <span className="text-[9px] font-mono text-[#C98799] font-bold">21.10</span>
+                <Heart className="w-4 h-4 text-[#C98799] fill-[#F8DCE4]" />
                 <span className="text-[8px] text-stone-400">LOVE</span>
               </div>
             </div>
 
             {/* Center Wax Seal */}
             <div className="z-10 flex flex-col items-center gap-2">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-rose-700 via-rose-600 to-rose-400 shadow-xl flex items-center justify-center text-white border-2 border-rose-200/80 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#C98799] to-[#A86577] shadow-xl flex items-center justify-center text-white border-2 border-[#F8DCE4] group-hover:scale-110 transition-transform">
                 <Heart className="w-8 h-8 fill-white text-white drop-shadow" />
               </div>
-              <span className="font-handwriting text-2xl text-stone-800 font-medium">
+              <span className="font-handwriting text-2xl text-[#6B4B50] font-medium">
                 {letter.envelopeLabel}
               </span>
             </div>
 
             {/* Tap instruction */}
-            <div className="z-10 flex items-center gap-1.5 text-xs text-rose-500 font-medium pb-1">
+            <div className="z-10 flex items-center gap-1.5 text-xs text-[#C98799] font-medium pb-1">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>Chạm để mở niêm phong 💌</span>
             </div>
@@ -92,13 +92,13 @@ export const Scene5SecretLoveLetter: React.FC = () => {
         </div>
       ) : (
         /* Unfolded Letter Parchment */
-        <div className="relative bg-[#FFFAF5] rounded-3xl shadow-2xl p-6 sm:p-12 border border-rose-200/80 transition-all duration-500 max-w-2xl mx-auto">
+        <div className="relative bg-[#FFF8F0] rounded-3xl shadow-2xl p-6 sm:p-12 border border-[#F8DCE4] transition-all duration-500 max-w-2xl mx-auto">
           {/* Subtle paper texture overlay */}
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-36 h-7 washi-tape rotate-[-0.5deg] z-10" />
 
           {/* Letter Header */}
-          <div className="flex items-center justify-between border-b border-rose-200/60 pb-4 mb-6">
-            <div className="flex items-center gap-2 text-rose-600 text-xs sm:text-sm font-medium">
+          <div className="flex items-center justify-between border-b border-[#F8DCE4] pb-4 mb-6">
+            <div className="flex items-center gap-2 text-[#C98799] text-xs sm:text-sm font-medium">
               <ScrollText className="w-4 h-4" />
               <span>{letter.letterTitle}</span>
             </div>
@@ -106,22 +106,22 @@ export const Scene5SecretLoveLetter: React.FC = () => {
           </div>
 
           {/* Letter Body */}
-          <div className="space-y-4 text-stone-800 leading-relaxed font-sans text-base sm:text-lg">
-            <p className="font-serif text-xl sm:text-2xl font-semibold text-rose-900 mb-4">
+          <div className="space-y-4 text-[#6B4B50] leading-relaxed font-sans text-base sm:text-lg">
+            <p className="font-serif text-xl sm:text-2xl font-semibold text-[#6B4B50] mb-4">
               {letter.salutation}
             </p>
 
             {letter.paragraphs.map((p, idx) => (
-              <p key={idx} className="text-stone-700 font-light text-justify sm:text-left">
+              <p key={idx} className="text-[#6B4B50]/90 font-light text-justify sm:text-left leading-relaxed">
                 {p}
               </p>
             ))}
 
             <div className="pt-6 text-right space-y-1">
-              <p className="font-serif text-xl font-semibold text-rose-600">
+              <p className="font-serif text-xl font-semibold text-[#C98799]">
                 {letter.closing}
               </p>
-              <p className="font-handwriting text-2xl text-stone-600">
+              <p className="font-handwriting text-2xl text-[#6B4B50]">
                 {letter.signature}
               </p>
             </div>

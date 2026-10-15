@@ -96,10 +96,10 @@ export const Scene1Invitation: React.FC<Scene1InvitationProps> = ({ onProceedToN
 
       <div className="max-w-xl w-full text-center mx-auto relative z-10">
         {/* Birthday Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-100/80 text-rose-700 text-xs sm:text-sm font-medium mb-6 shadow-sm border border-rose-200/60">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#F8DCE4]/60 text-[#6B4B50] text-xs sm:text-sm font-medium mb-6 shadow-sm border border-[#C98799]/30">
           <span className="text-base">🎂</span>
           <span className="font-semibold tracking-wide">21.10.2026</span>
-          <span className="text-rose-300">·</span>
+          <span className="text-[#C98799]">·</span>
           <span>{BIRTHDAY_CONFIG.scene1.badge}</span>
         </div>
 
@@ -111,10 +111,10 @@ export const Scene1Invitation: React.FC<Scene1InvitationProps> = ({ onProceedToN
             }`}
           >
             {/* Glowing Aura */}
-            <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-rose-300/30 via-pink-200/40 to-amber-200/30 blur-2xl animate-pulse-glow" />
+            <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-[#C98799]/25 via-[#F8DCE4]/35 to-amber-200/20 blur-2xl animate-pulse-glow" />
 
             {/* Realistic Envelope Graphic */}
-            <div className="relative w-72 sm:w-80 h-52 sm:h-56 bg-gradient-to-br from-[#FFF4EB] to-[#FFE3E8] rounded-2xl shadow-2xl border border-rose-200/80 p-5 flex flex-col items-center justify-between overflow-hidden">
+            <div className="relative w-72 sm:w-80 h-52 sm:h-56 bg-gradient-to-br from-[#FFF8F0] to-[#F8DCE4]/80 rounded-2xl shadow-2xl border border-[#F8DCE4] p-5 flex flex-col items-center justify-between overflow-hidden">
               {/* Envelope flap folds (SVG) */}
               <div
                 className={`absolute top-0 left-0 right-0 h-28 origin-top transition-transform duration-700 ease-in-out z-20 ${
@@ -173,7 +173,7 @@ export const Scene1Invitation: React.FC<Scene1InvitationProps> = ({ onProceedToN
 
         {/* Story Text */}
         <div className="space-y-4 mb-6">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-stone-900 tracking-tight leading-snug">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#6B4B50] tracking-tight leading-snug">
             {BIRTHDAY_CONFIG.scene1.title}
           </h1>
 
@@ -184,8 +184,8 @@ export const Scene1Invitation: React.FC<Scene1InvitationProps> = ({ onProceedToN
 
         {/* Small Countdown Clock to 00:00 on October 21, 2026 */}
         <div className="mb-8">
-          <div className="inline-block p-4 sm:p-5 rounded-2xl glass-panel-warm border border-rose-200/80 shadow-md">
-            <div className="flex items-center justify-center gap-1.5 text-xs text-rose-600 font-medium mb-3">
+          <div className="inline-block p-4 sm:p-5 rounded-2xl glass-panel-warm border border-[#F8DCE4] shadow-md">
+            <div className="flex items-center justify-center gap-1.5 text-xs text-[#C98799] font-medium mb-3">
               <Clock className="w-3.5 h-3.5" />
               <span>
                 {countdown.isPast
@@ -195,7 +195,7 @@ export const Scene1Invitation: React.FC<Scene1InvitationProps> = ({ onProceedToN
             </div>
 
             {countdown.isPast ? (
-              <div className="text-sm font-serif font-bold text-rose-700 flex items-center justify-center gap-2">
+              <div className="text-sm font-serif font-bold text-[#C98799] flex items-center justify-center gap-2">
                 <Sparkles className="w-4 h-4 text-amber-500" />
                 <span>Chúc mừng sinh nhật em yêu của anh!</span>
                 <Sparkles className="w-4 h-4 text-amber-500" />
@@ -203,8 +203,8 @@ export const Scene1Invitation: React.FC<Scene1InvitationProps> = ({ onProceedToN
             ) : (
               <div className="grid grid-cols-4 gap-2 sm:gap-3 text-center">
                 {/* Ngày */}
-                <div className="bg-white/80 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 border border-rose-100 shadow-sm min-w-[58px]">
-                  <span className="block font-serif text-lg sm:text-2xl font-bold text-rose-600 leading-tight">
+                <div className="bg-white/80 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 border border-[#F8DCE4] shadow-sm min-w-[58px]">
+                  <span className="block font-serif text-lg sm:text-2xl font-bold text-[#C98799] leading-tight">
                     {String(countdown.days).padStart(2, '0')}
                   </span>
                   <span className="block text-[10px] text-stone-500 font-medium uppercase tracking-wider">
@@ -213,8 +213,8 @@ export const Scene1Invitation: React.FC<Scene1InvitationProps> = ({ onProceedToN
                 </div>
 
                 {/* Giờ */}
-                <div className="bg-white/80 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 border border-rose-100 shadow-sm min-w-[58px]">
-                  <span className="block font-serif text-lg sm:text-2xl font-bold text-stone-800 leading-tight">
+                <div className="bg-white/80 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 border border-[#F8DCE4] shadow-sm min-w-[58px]">
+                  <span className="block font-serif text-lg sm:text-2xl font-bold text-[#6B4B50] leading-tight">
                     {String(countdown.hours).padStart(2, '0')}
                   </span>
                   <span className="block text-[10px] text-stone-500 font-medium uppercase tracking-wider">
@@ -223,8 +223,8 @@ export const Scene1Invitation: React.FC<Scene1InvitationProps> = ({ onProceedToN
                 </div>
 
                 {/* Phút */}
-                <div className="bg-white/80 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 border border-rose-100 shadow-sm min-w-[58px]">
-                  <span className="block font-serif text-lg sm:text-2xl font-bold text-stone-800 leading-tight">
+                <div className="bg-white/80 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 border border-[#F8DCE4] shadow-sm min-w-[58px]">
+                  <span className="block font-serif text-lg sm:text-2xl font-bold text-[#6B4B50] leading-tight">
                     {String(countdown.minutes).padStart(2, '0')}
                   </span>
                   <span className="block text-[10px] text-stone-500 font-medium uppercase tracking-wider">
@@ -233,7 +233,7 @@ export const Scene1Invitation: React.FC<Scene1InvitationProps> = ({ onProceedToN
                 </div>
 
                 {/* Giây */}
-                <div className="bg-white/80 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 border border-rose-100 shadow-sm min-w-[58px]">
+                <div className="bg-white/80 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 border border-[#F8DCE4] shadow-sm min-w-[58px]">
                   <span className="block font-serif text-lg sm:text-2xl font-bold text-amber-600 leading-tight animate-pulse">
                     {String(countdown.seconds).padStart(2, '0')}
                   </span>
@@ -253,12 +253,12 @@ export const Scene1Invitation: React.FC<Scene1InvitationProps> = ({ onProceedToN
             disabled={isOpening}
             className={`group relative inline-flex items-center gap-3 px-8 py-4 rounded-full font-medium text-base text-white shadow-xl transition-all duration-300 ${
               isOpening
-                ? 'bg-rose-400 cursor-wait scale-95'
-                : 'bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 hover:shadow-rose-400/50 hover:scale-105 active:scale-95 cursor-pointer'
+                ? 'bg-[#C98799]/70 cursor-wait scale-95'
+                : 'bg-gradient-to-r from-[#C98799] to-[#A86577] hover:from-[#A86577] hover:to-[#8E4E5F] hover:shadow-[#C98799]/40 hover:scale-105 active:scale-95 cursor-pointer'
             }`}
           >
             {/* Sparkle ring */}
-            <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-rose-400 to-amber-300 opacity-60 blur-md group-hover:opacity-100 transition-opacity" />
+            <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#F8DCE4] to-amber-200 opacity-60 blur-md group-hover:opacity-100 transition-opacity" />
 
             <span className="relative flex items-center gap-2.5">
               <Mail className="w-5 h-5 transition-transform group-hover:scale-110" />
@@ -268,7 +268,7 @@ export const Scene1Invitation: React.FC<Scene1InvitationProps> = ({ onProceedToN
           </button>
 
           <p className="text-xs text-stone-400 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-300" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#C98799]" />
             Nhấn vào đây để cùng anh mở ra điều kỳ diệu cho ngày sinh nhật
           </p>
         </div>

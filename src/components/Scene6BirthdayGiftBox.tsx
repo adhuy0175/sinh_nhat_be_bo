@@ -31,12 +31,12 @@ export const Scene6BirthdayGiftBox: React.FC = () => {
     <section id="scene-gift" className="relative py-20 px-4 sm:px-6 max-w-4xl mx-auto">
       {/* Section Header */}
       <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-rose-100/70 text-rose-700 text-xs font-medium">
-          <Gift className="w-3.5 h-3.5" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#F8DCE4]/60 text-[#6B4B50] text-xs font-medium border border-[#C98799]/30">
+          <Gift className="w-3.5 h-3.5 text-[#C98799]" />
           <span>{giftConfig.badge}</span>
         </div>
 
-        <h2 className="text-3xl sm:text-4xl font-serif font-bold text-stone-900 tracking-tight">
+        <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#6B4B50] tracking-tight">
           {giftConfig.title}
         </h2>
 
@@ -134,14 +134,14 @@ export const Scene6BirthdayGiftBox: React.FC = () => {
                     onClick={() => handleClaimVoucher(idx)}
                     className={`p-4 rounded-2xl border transition-all duration-200 cursor-pointer flex items-center justify-between gap-4 ${
                       isClaimed
-                        ? 'bg-rose-50/80 border-rose-300 shadow-sm'
-                        : 'bg-white/80 hover:bg-white border-amber-200/80 hover:border-amber-300 shadow-sm hover:shadow'
+                        ? 'bg-[#F8DCE4]/60 border-[#C98799]/40 shadow-sm'
+                        : 'bg-white/80 hover:bg-white border-[#F8DCE4] hover:border-[#C98799]/40 shadow-sm hover:shadow'
                     }`}
                   >
                     <div className="flex items-center gap-3.5">
                       <span className="text-2xl sm:text-3xl shrink-0 select-none">{item.icon}</span>
                       <div className="text-left">
-                        <h4 className="font-serif font-bold text-stone-900 text-sm sm:text-base">
+                        <h4 className="font-serif font-bold text-[#6B4B50] text-sm sm:text-base">
                           {item.title}
                         </h4>
                         <p className="text-xs text-stone-500 font-light mt-0.5">
@@ -153,8 +153,8 @@ export const Scene6BirthdayGiftBox: React.FC = () => {
                     <button
                       className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 transition-colors ${
                         isClaimed
-                          ? 'bg-rose-500 text-white'
-                          : 'bg-amber-100 hover:bg-amber-200 text-amber-800'
+                          ? 'bg-[#C98799] text-white'
+                          : 'bg-[#F8DCE4] hover:bg-[#F8DCE4]/80 text-[#6B4B50]'
                       }`}
                     >
                       {isClaimed ? (
@@ -172,14 +172,14 @@ export const Scene6BirthdayGiftBox: React.FC = () => {
             </div>
 
             {/* Boyfriend's Secret Message */}
-            <div className="mt-8 pt-6 border-t border-amber-200/80">
-              <div className="p-4 bg-rose-50/70 rounded-2xl border border-rose-200/60 flex items-start gap-3">
-                <Heart className="w-5 h-5 text-rose-500 fill-rose-400 shrink-0 mt-0.5" />
+            <div className="mt-8 pt-6 border-t border-[#F8DCE4]">
+              <div className="p-4 bg-[#FFF8F0] rounded-2xl border border-[#F8DCE4] flex items-start gap-3">
+                <Heart className="w-5 h-5 text-[#C98799] fill-[#C98799] shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <span className="text-xs font-semibold text-rose-700 block mb-1">
+                  <span className="text-xs font-semibold text-[#C98799] block mb-1">
                     Lời nhắn gửi bí mật từ {BIRTHDAY_CONFIG.couple.boyfriendName}:
                   </span>
-                  <p className="font-handwriting text-xl text-stone-800">
+                  <p className="font-handwriting text-xl text-[#6B4B50]">
                     "{customNote}"
                   </p>
                 </div>

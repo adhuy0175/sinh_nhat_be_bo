@@ -11,7 +11,7 @@ export const FloatingAtmosphere: React.FC = () => {
       duration: 10 + (i % 6) * 4,
       delay: (i % 5) * 1.5,
       type: i % 5 === 0 ? 'balloon' : i % 5 === 1 ? 'heart' : i % 5 === 2 ? 'star' : i % 5 === 3 ? 'petal' : 'orb',
-      balloonColor: ['#fda4af', '#fcd34d', '#bae6fd', '#f472b6', '#c4b5fd'][i % 5],
+      balloonColor: ['#F8DCE4', '#C98799', '#fde68a', '#fbcfe8', '#fed7aa'][i % 5],
       opacity: 0.2 + (i % 3) * 0.12,
     }));
   }, []);
@@ -22,9 +22,9 @@ export const FloatingAtmosphere: React.FC = () => {
       className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
     >
       {/* Gentle gradient background atmosphere */}
-      <div className="absolute top-[-15%] left-[-10%] w-[55vw] h-[55vw] rounded-full bg-rose-200/25 blur-[120px]" />
-      <div className="absolute top-[35%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-100/35 blur-[100px]" />
-      <div className="absolute bottom-[-10%] left-[20%] w-[50vw] h-[50vw] rounded-full bg-pink-100/30 blur-[130px]" />
+      <div className="absolute top-[-15%] left-[-10%] w-[55vw] h-[55vw] rounded-full bg-[#F8DCE4]/25 blur-[120px]" />
+      <div className="absolute top-[35%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-100/25 blur-[100px]" />
+      <div className="absolute bottom-[-10%] left-[20%] w-[50vw] h-[50vw] rounded-full bg-[#C98799]/15 blur-[130px]" />
 
       {/* Floating ambient particles */}
       {particles.map((p) => (

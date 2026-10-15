@@ -41,6 +41,10 @@ export default function App() {
           setPhotos(parsed);
         }
       }
+      const savedCover = localStorage.getItem('birthday_cover_photo_v1');
+      if (savedCover) {
+        BIRTHDAY_CONFIG.scene3.coverPhoto = JSON.parse(savedCover);
+      }
     } catch {
       // Fallback to default
     }
@@ -59,8 +63,9 @@ export default function App() {
     setPhotos(BIRTHDAY_CONFIG.scene3.photos);
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
+      localStorage.removeItem('birthday_cover_photo_v1');
     } catch {
-      //
+      // Storage quota or error
     }
   };
 
@@ -87,12 +92,12 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#FFF9F9] text-stone-800 selection:bg-rose-200 selection:text-rose-900 font-sans">
+    <div className="relative min-h-screen bg-[#FFF8F0] text-[#6B4B50] selection:bg-[#F8DCE4] selection:text-[#6B4B50] font-sans">
       {/* Floating Ambient Atmosphere (balloons, hearts, particles, petals) */}
       <FloatingAtmosphere />
 
       {/* Top Bar Navigation (Strict 3-zone contract) */}
-      <header className="sticky top-0 z-40 w-full glass-panel-warm border-b border-rose-100/80 px-4 sm:px-8 py-3.5 transition-all">
+      <header className="sticky top-0 z-40 w-full glass-panel-warm border-b border-[#F8DCE4] px-4 sm:px-8 py-3.5 transition-all">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-8">
           {/* Zone 1: Single text wordmark */}
           <a
@@ -101,47 +106,47 @@ export default function App() {
               e.preventDefault();
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="font-serif text-base sm:text-lg font-bold text-stone-900 hover:text-rose-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-2"
+            className="font-serif text-base sm:text-lg font-bold text-[#6B4B50] hover:text-[#C98799] transition-colors whitespace-nowrap shrink-0 flex items-center gap-2"
           >
             <span className="text-xl">🎂</span>
             <span>21.10.2026 · {BIRTHDAY_CONFIG.couple.girlfriendName}</span>
           </a>
 
           {/* Zone 2: 4-5 concise single-line nav links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs sm:text-sm font-medium text-stone-600">
+          <nav className="hidden md:flex items-center gap-6 text-xs sm:text-sm font-medium text-[#6B4B50]/80">
             <button
               onClick={() => scrollToSection('scene-cake')}
-              className="hover:text-rose-600 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              className="hover:text-[#C98799] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               Thổi nến
             </button>
             <button
               onClick={() => scrollToSection('scene-memories')}
-              className="hover:text-rose-600 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              className="hover:text-[#C98799] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               Khoảnh khắc của em
             </button>
             <button
               onClick={() => scrollToSection('scene-reasons')}
-              className="hover:text-rose-600 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              className="hover:text-[#C98799] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               Lời chúc tuổi mới
             </button>
             <button
               onClick={() => scrollToSection('scene-letter')}
-              className="hover:text-rose-600 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              className="hover:text-[#C98799] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               Thư sinh nhật
             </button>
             <button
               onClick={() => scrollToSection('scene-gift')}
-              className="hover:text-rose-600 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              className="hover:text-[#C98799] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               Hộp quà bí mật
             </button>
             <button
               onClick={() => scrollToSection('scene-final')}
-              className="hover:text-rose-600 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              className="hover:text-[#C98799] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               Pháo hoa
             </button>
@@ -153,8 +158,8 @@ export default function App() {
               onClick={() => romanticAudio.toggle()}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition-all cursor-pointer ${
                 isAudioPlaying
-                  ? 'bg-rose-50 text-rose-600 border-rose-300 font-medium'
-                  : 'bg-white/70 hover:bg-white text-stone-600 hover:text-rose-600 border-stone-200'
+                  ? 'bg-[#F8DCE4] text-[#C98799] border-[#C98799]/40 font-medium'
+                  : 'bg-white/80 hover:bg-white text-[#6B4B50] hover:text-[#C98799] border-[#F8DCE4]'
               }`}
               title="Phát / Dừng nhạc sinh nhật"
             >
@@ -164,7 +169,7 @@ export default function App() {
 
             <button
               onClick={() => setIsCustomizerOpen(true)}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-stone-600 hover:text-rose-600 bg-white/70 hover:bg-white rounded-lg border border-stone-200 transition-colors cursor-pointer"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#6B4B50] hover:text-[#C98799] bg-white/80 hover:bg-white rounded-lg border border-[#F8DCE4] transition-colors cursor-pointer"
               title="Đổi hoặc thêm ảnh"
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -173,7 +178,7 @@ export default function App() {
 
             <button
               onClick={handleTopWishes}
-              className="px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 hover:from-rose-600 hover:to-pink-600 rounded-lg shadow-sm hover:shadow transition-all whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#C98799] to-[#A86577] hover:from-[#A86577] hover:to-[#8E4E5F] rounded-lg shadow-sm hover:shadow transition-all whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-200" />
               <span>Gửi ngàn lời chúc 💖</span>
@@ -199,10 +204,10 @@ export default function App() {
         </div>
 
         {/* Subtle decorative section divider */}
-        <div className="flex items-center justify-center gap-4 py-4 text-rose-300">
-          <div className="h-px bg-gradient-to-r from-transparent via-rose-200 to-transparent w-36" />
-          <Heart className="w-4 h-4 fill-rose-300" />
-          <div className="h-px bg-gradient-to-r from-transparent via-rose-200 to-transparent w-36" />
+        <div className="flex items-center justify-center gap-4 py-4 text-[#C98799]/40">
+          <div className="h-px bg-gradient-to-r from-transparent via-[#C98799]/30 to-transparent w-36" />
+          <Heart className="w-4 h-4 fill-[#C98799]/50 text-[#C98799]" />
+          <div className="h-px bg-gradient-to-r from-transparent via-[#C98799]/30 to-transparent w-36" />
         </div>
 
         {/* Scene 3: Birthday Photo Gallery ("Những khoảnh khắc đáng yêu của em") */}
@@ -212,10 +217,10 @@ export default function App() {
         />
 
         {/* Subtle divider */}
-        <div className="flex items-center justify-center gap-4 py-4 text-rose-300">
-          <div className="h-px bg-gradient-to-r from-transparent via-rose-200 to-transparent w-36" />
-          <span className="text-sm font-handwriting text-rose-400">Tuổi mới thật rực rỡ</span>
-          <div className="h-px bg-gradient-to-r from-transparent via-rose-200 to-transparent w-36" />
+        <div className="flex items-center justify-center gap-4 py-4 text-[#C98799]/40">
+          <div className="h-px bg-gradient-to-r from-transparent via-[#C98799]/30 to-transparent w-36" />
+          <span className="text-sm font-handwriting text-[#C98799]">Tuổi mới thật rực rỡ</span>
+          <div className="h-px bg-gradient-to-r from-transparent via-[#C98799]/30 to-transparent w-36" />
         </div>
 
         {/* Scene 4: Birthday Wishes Cards */}
@@ -244,12 +249,12 @@ export default function App() {
       />
 
       {/* Romantic Birthday Footer */}
-      <footer className="relative z-10 border-t border-rose-100/80 py-10 px-4 text-center glass-panel-warm">
+      <footer className="relative z-10 border-t border-[#F8DCE4] py-10 px-4 text-center glass-panel-warm">
         <div className="max-w-xl mx-auto space-y-3">
-          <div className="flex items-center justify-center gap-1.5 text-rose-500">
-            <Heart className="w-4 h-4 fill-rose-500" />
-            <span className="font-handwriting text-2xl">Chúc mừng sinh nhật công chúa</span>
-            <Heart className="w-4 h-4 fill-rose-500" />
+          <div className="flex items-center justify-center gap-1.5 text-[#C98799]">
+            <Heart className="w-4 h-4 fill-[#C98799]" />
+            <span className="font-handwriting text-2xl text-[#6B4B50]">Chúc mừng sinh nhật công chúa</span>
+            <Heart className="w-4 h-4 fill-[#C98799]" />
           </div>
 
           <p className="text-xs text-stone-500">
