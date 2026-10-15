@@ -65,19 +65,17 @@ export const MusicControl: React.FC<MusicControlProps> = ({ onCustomTrackLoaded 
       setErrorMessage(null);
       romanticAudio.clearPlaybackError();
 
-      // Create new blob object URL
-      const url = URL.createObjectURL(file);
       const cleanFileName = file.name.replace(/\.[^/.]+$/, '');
 
-      // Immediately replace track and start playing
-      const success = await romanticAudio.replaceAudioTrack(
-        url,
+      // Persist the actual binary Blob in IndexedDB and switch track cleanly
+      const success = await romanticAudio.setUploadedTrack(
+        file,
         cleanFileName,
         'Tệp MP3 bạn tải lên'
       );
 
       if (success) {
-        onCustomTrackLoaded?.(url);
+        onCustomTrackLoaded?.(romanticAudio.getCurrentTrackSrc());
       }
     } catch (err) {
       console.error('File upload error:', err);

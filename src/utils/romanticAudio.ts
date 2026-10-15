@@ -1,26 +1,33 @@
 import { BIRTHDAY_CONFIG } from '../config/birthdayConfig';
+import {
+  saveAudioToStorage,
+  loadAudioFromStorage,
+  clearAudioFromStorage,
+  PersistedAudioTrack,
+} from './audioStorage';
 
 /**
  * Romantic Audio Engine:
  * - Single centralized audio controller for the entire application.
- * - Manages HTMLAudioElement playback with immediate track replacement.
- * - Handles stopping default audio, stopping synthesizer oscillators, and stopping fallback loops.
- * - Prevents race conditions during asynchronous play/pause/switch operations.
- * - Safe blob URL cleanup and session memory.
- * - Dedicated Web Audio synthesizer with clean disconnectable master gain.
- * - Full debug logging for all required audio events:
+ * - Manages HTMLAudioElement playback with immediate, reliable track replacement.
+ * - Uses IndexedDB to permanently persist uploaded custom MP3 Blobs across reloads.
+ * - Restores custom track before initializing or starting default playback.
+ * - Prevents falling back to default while asynchronous restoration is still running.
+ * - Uploaded MP3 retains absolute priority over default music.
+ * - Stops synthesizer and disconnects all oscillator nodes cleanly.
+ * - Displays playback errors instead of silently switching or falling back to default music.
+ * - Comprehensive debug logging for:
+ *   [AUDIO_RESTORATION_START], [AUDIO_RESTORATION_COMPLETE],
  *   [MUSIC_SOURCE_CHANGED], [DEFAULT_AUDIO_STOPPED], [SYNTHESIZER_STOPPED],
  *   [CUSTOM_AUDIO_STARTED], [AUDIO_PLAYBACK_ERROR].
  */
 
-interface SessionTrackData {
-  src: string;
-  title: string;
-  artist: string;
-  isCustom: boolean;
-}
+const AUDIO_SETTINGS_KEY = 'romantic_birthday_audio_settings';
 
-const SESSION_STORAGE_KEY = 'romantic_birthday_audio_track_v2';
+interface AudioSettings {
+  volume: number;
+  isMuted: boolean;
+}
 
 class RomanticAudioEngine {
   private audioCtx: AudioContext | null = null;
@@ -36,59 +43,112 @@ class RomanticAudioEngine {
   private volume = 0.7;
   private listeners: Array<() => void> = [];
 
-  // Track info & state
+  // Track state
   private currentTrackSrc: string = BIRTHDAY_CONFIG.music.src;
   private currentTrackTitle: string = BIRTHDAY_CONFIG.music.title;
   private currentTrackArtist: string = BIRTHDAY_CONFIG.music.artist;
   private isCustom = false;
   private currentBlobUrl: string | null = null;
+  private currentFileName: string | null = null;
+  private currentMimeType: string | null = null;
   private playbackError: string | null = null;
+
+  // Asynchronous restoration tracking
+  private isRestoring = true;
+  private restorationPromise: Promise<void> | null = null;
 
   // Race condition protection
   private operationToken = 0;
   private pendingPlayPromise: Promise<void> | null = null;
 
   constructor() {
-    this.restoreFromSession();
+    this.restoreSettings();
+    this.restorationPromise = this.restoreFromIndexedDB();
   }
 
-  private restoreFromSession() {
+  /**
+   * Restores user volume and mute preference from localStorage
+   */
+  private restoreSettings() {
     try {
       if (typeof window === 'undefined') return;
-      const saved = sessionStorage.getItem(SESSION_STORAGE_KEY);
+      const saved = localStorage.getItem(AUDIO_SETTINGS_KEY);
       if (saved) {
-        const data: SessionTrackData = JSON.parse(saved);
-        if (data.src && !data.src.startsWith('blob:')) {
-          this.currentTrackSrc = data.src;
-          this.currentTrackTitle = data.title || BIRTHDAY_CONFIG.music.title;
-          this.currentTrackArtist = data.artist || BIRTHDAY_CONFIG.music.artist;
-          this.isCustom = Boolean(data.isCustom);
-        } else if (data.isCustom) {
-          // If previous session had a custom blob, keep metadata placeholder
-          this.currentTrackTitle = data.title || 'Bản nhạc tùy chọn';
-          this.currentTrackArtist = data.artist || 'Tệp MP3 đã tải lên';
-          // Blob URLs are invalid across page reloads, fallback to default src
-          this.currentTrackSrc = BIRTHDAY_CONFIG.music.src;
-          this.isCustom = false;
+        const parsed: AudioSettings = JSON.parse(saved);
+        if (typeof parsed.volume === 'number') {
+          this.volume = Math.max(0, Math.min(1, parsed.volume));
+        }
+        if (typeof parsed.isMuted === 'boolean') {
+          this.isMuted = parsed.isMuted;
         }
       }
     } catch {
-      // Ignore storage read error
+      // Ignore settings read error
     }
   }
 
-  private saveToSession() {
+  private saveSettings() {
     try {
       if (typeof window === 'undefined') return;
-      const data: SessionTrackData = {
-        src: this.currentTrackSrc.startsWith('blob:') ? '' : this.currentTrackSrc,
-        title: this.currentTrackTitle,
-        artist: this.currentTrackArtist,
-        isCustom: this.isCustom,
+      const settings: AudioSettings = {
+        volume: this.volume,
+        isMuted: this.isMuted,
       };
-      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(AUDIO_SETTINGS_KEY, JSON.stringify(settings));
     } catch {
-      // Ignore storage write error
+      // Ignore settings save error
+    }
+  }
+
+  /**
+   * Asynchronously restores the custom uploaded track from IndexedDB.
+   * Ensures that no default audio is started while restoration is running.
+   */
+  private async restoreFromIndexedDB(): Promise<void> {
+    console.log('[AUDIO_RESTORATION_START] Checking IndexedDB for persisted custom audio track...');
+    this.isRestoring = true;
+
+    try {
+      const storedTrack: PersistedAudioTrack | null = await loadAudioFromStorage();
+
+      if (storedTrack && storedTrack.blob && storedTrack.blob.size > 0) {
+        // Recreate a fresh object URL from the persisted Blob
+        const blobUrl = URL.createObjectURL(storedTrack.blob);
+        this.currentTrackSrc = blobUrl;
+        this.currentBlobUrl = blobUrl;
+        this.currentFileName = storedTrack.fileName;
+        this.currentMimeType = storedTrack.mimeType;
+        this.currentTrackTitle = storedTrack.title || storedTrack.fileName;
+        this.currentTrackArtist = storedTrack.artist || 'Tệp MP3 bạn đã tải lên';
+        this.isCustom = true;
+
+        console.log('[AUDIO_RESTORATION_COMPLETE] Successfully restored custom track from IndexedDB:', {
+          fileName: storedTrack.fileName,
+          sizeBytes: storedTrack.blob.size,
+          mimeType: storedTrack.mimeType,
+          title: this.currentTrackTitle,
+          blobUrl,
+        });
+      } else {
+        console.log('[AUDIO_RESTORATION_COMPLETE] No custom track in IndexedDB. Using default music source:', {
+          src: BIRTHDAY_CONFIG.music.src,
+          title: BIRTHDAY_CONFIG.music.title,
+        });
+      }
+    } catch (err) {
+      console.error('[AUDIO_RESTORATION_ERROR] Error restoring track from IndexedDB:', err);
+    } finally {
+      this.isRestoring = false;
+      this.notify();
+    }
+  }
+
+  /**
+   * Returns a promise that resolves once startup restoration is complete.
+   */
+  public async waitForRestoration(): Promise<void> {
+    if (this.restorationPromise) {
+      await this.restorationPromise;
     }
   }
 
@@ -134,6 +194,10 @@ class RomanticAudioEngine {
     return this.currentTrackArtist;
   }
 
+  public getCurrentFileName(): string | null {
+    return this.currentFileName;
+  }
+
   public isCustomTrack(): boolean {
     return this.isCustom;
   }
@@ -144,6 +208,10 @@ class RomanticAudioEngine {
 
   public getPlaybackError(): string | null {
     return this.playbackError;
+  }
+
+  public isRestoringTrack(): boolean {
+    return this.isRestoring;
   }
 
   public clearPlaybackError(): void {
@@ -222,7 +290,42 @@ class RomanticAudioEngine {
   }
 
   /**
+   * Uploads and sets a new custom audio file (File or Blob).
+   * - Persists the binary Blob in IndexedDB.
+   * - Immediately replaces the active track and starts playing.
+   */
+  public async setUploadedTrack(
+    fileOrBlob: File | Blob,
+    customTitle?: string,
+    customArtist?: string
+  ): Promise<boolean> {
+    await this.waitForRestoration();
+
+    const fileName = (fileOrBlob as File).name || 'custom-music.mp3';
+    const mimeType = fileOrBlob.type || 'audio/mpeg';
+    const title = customTitle || fileName.replace(/\.[^/.]+$/, '');
+    const artist = customArtist || 'Tệp MP3 bạn tải lên';
+
+    // 1. Create a fresh object URL for playback
+    const newBlobUrl = URL.createObjectURL(fileOrBlob);
+
+    // 2. Persist to IndexedDB immediately
+    try {
+      await saveAudioToStorage(fileOrBlob, fileName, mimeType, title, artist);
+    } catch (dbErr) {
+      console.error('[AUDIO_STORAGE_ERROR] Could not persist to IndexedDB:', dbErr);
+    }
+
+    this.currentFileName = fileName;
+    this.currentMimeType = mimeType;
+
+    // 3. Replace the active audio track
+    return this.replaceAudioTrack(newBlobUrl, title, artist, true);
+  }
+
+  /**
    * Dedicated method to safely replace the active audio track with a new source.
+   * - Waits for any ongoing restoration to complete.
    * - Stops default audio and synthesizer.
    * - Disconnects all oscillators and cancels timeouts.
    * - Cleans up old blob URLs.
@@ -232,13 +335,19 @@ class RomanticAudioEngine {
   public async replaceAudioTrack(
     newSrc: string,
     title?: string,
-    artist?: string
+    artist?: string,
+    markAsCustom?: boolean
   ): Promise<boolean> {
+    await this.waitForRestoration();
+
     const currentOp = ++this.operationToken;
     this.playbackError = null;
 
     const previousSrc = this.currentTrackSrc;
-    const isNewCustom = newSrc !== BIRTHDAY_CONFIG.music.src;
+    const isNewCustom =
+      markAsCustom !== undefined
+        ? markAsCustom
+        : newSrc.startsWith('blob:') || newSrc !== BIRTHDAY_CONFIG.music.src;
 
     console.log('[MUSIC_SOURCE_CHANGED]', {
       from: previousSrc,
@@ -269,14 +378,13 @@ class RomanticAudioEngine {
       this.currentBlobUrl = newSrc;
     }
 
-    // 4. Update track info & session state
+    // 4. Update track info
     this.currentTrackSrc = newSrc;
     this.currentTrackTitle =
       title || (isNewCustom ? 'Bản nhạc bạn chọn' : BIRTHDAY_CONFIG.music.title);
     this.currentTrackArtist =
       artist || (isNewCustom ? 'Tệp MP3 tải lên' : BIRTHDAY_CONFIG.music.artist);
     this.isCustom = isNewCustom;
-    this.saveToSession();
 
     // 5. Ensure audio context is ready
     this.initAudioContext();
@@ -289,7 +397,6 @@ class RomanticAudioEngine {
     audio.preload = 'auto';
 
     audio.onended = () => {
-      // Loop is true, but handle unexpected finish
       if (currentOp !== this.operationToken) return;
       this.isPlaying = false;
       this.notify();
@@ -300,7 +407,7 @@ class RomanticAudioEngine {
       console.error('[AUDIO_PLAYBACK_ERROR]', 'Audio element error event for src:', newSrc);
       this.isPlaying = false;
       this.playbackError =
-        'Không thể phát tệp âm thanh này. Vui lòng thử lại với một file MP3 hoặc WAV hợp lệ.';
+        'Không thể phát tệp âm thanh này. Vui lòng thử lại với một file MP3 hợp lệ.';
       this.notify();
     };
 
@@ -346,7 +453,7 @@ class RomanticAudioEngine {
       console.error('[AUDIO_PLAYBACK_ERROR]', 'Audio play rejection for src:', newSrc, err);
       this.isPlaying = false;
       this.playbackError =
-        'Không thể phát nhạc. Trình duyệt đã chặn tự động phát hoặc tệp bị hỏng. Hãy bấm nút Phát nhạc để thử lại.';
+        'Trình duyệt yêu cầu tương tác hoặc tệp âm thanh bị lỗi. Hãy bấm "Phát nhạc" để nghe bài hát.';
       this.notify();
       return false;
     }
@@ -354,20 +461,35 @@ class RomanticAudioEngine {
 
   /**
    * Reverts track to the permanent default music asset (/music/the-gioi-cua-anh.mp3)
+   * and clears the stored custom track from IndexedDB.
    */
   public async revertToDefault(): Promise<boolean> {
+    await this.waitForRestoration();
+
+    console.log('[MUSIC_SOURCE_CHANGED] User requested revert to default music');
+
+    // 1. Remove custom track from IndexedDB
+    await clearAudioFromStorage();
+    this.currentFileName = null;
+    this.currentMimeType = null;
+
+    // 2. Switch back to default track
     return this.replaceAudioTrack(
       BIRTHDAY_CONFIG.music.src,
       BIRTHDAY_CONFIG.music.title,
-      BIRTHDAY_CONFIG.music.artist
+      BIRTHDAY_CONFIG.music.artist,
+      false
     );
   }
 
   /**
    * Starts playing the active audio track.
    * If a custom track is loaded, it retains absolute priority over default music.
+   * Waits for any initial IndexedDB restoration before taking action.
    */
   public async startAudio(mp3Src?: string): Promise<void> {
+    await this.waitForRestoration();
+
     // If a custom track is active and an outside caller passed the default src, keep custom track
     let targetSrc = mp3Src || this.currentTrackSrc;
     if (this.isCustom && mp3Src === BIRTHDAY_CONFIG.music.src) {
@@ -412,15 +534,11 @@ class RomanticAudioEngine {
 
       console.error('[AUDIO_PLAYBACK_ERROR]', 'Playback failed in startAudio():', err);
 
-      // Rule 7: Do NOT automatically switch to synthesizer fallback after a custom MP3 is selected!
-      if (!this.isCustom && BIRTHDAY_CONFIG.music.useSynthesizerFallback) {
-        this.startSynth();
-      } else {
-        this.isPlaying = false;
-        this.playbackError =
-          'Không thể phát nhạc. Vui lòng bấm vào biểu tượng đĩa nhạc để cho phép trình duyệt phát.';
-        this.notify();
-      }
+      // Do not automatically switch to synthesizer fallback or fall back to default
+      this.isPlaying = false;
+      this.playbackError =
+        'Không thể phát nhạc tự động do chính sách trình duyệt. Vui lòng bấm vào biểu tượng đĩa nhạc để nghe.';
+      this.notify();
     }
   }
 
@@ -440,16 +558,16 @@ class RomanticAudioEngine {
     this.notify();
   }
 
-  public resume(mp3Src?: string): void {
+  public async resume(mp3Src?: string): Promise<void> {
     if (this.isPlaying) return;
-    this.startAudio(mp3Src || this.currentTrackSrc);
+    await this.startAudio(mp3Src || this.currentTrackSrc);
   }
 
-  public toggle(mp3Src?: string): void {
+  public async toggle(mp3Src?: string): Promise<void> {
     if (this.isPlaying) {
       this.pause();
     } else {
-      this.startAudio(mp3Src || this.currentTrackSrc);
+      await this.startAudio(mp3Src || this.currentTrackSrc);
     }
   }
 
@@ -458,6 +576,7 @@ class RomanticAudioEngine {
     if (this.audioElement) {
       this.audioElement.muted = this.isMuted;
     }
+    this.saveSettings();
     this.notify();
   }
 
@@ -466,6 +585,7 @@ class RomanticAudioEngine {
     if (this.audioElement) {
       this.audioElement.volume = this.volume;
     }
+    this.saveSettings();
     this.notify();
   }
 
@@ -483,178 +603,6 @@ class RomanticAudioEngine {
     } catch {
       // AudioContext unavailable
     }
-  }
-
-  private playChime(freq: number, duration: number, gainValue = 0.16) {
-    if (!this.audioCtx || this.isMuted) return;
-
-    try {
-      if (this.audioCtx.state === 'suspended') {
-        this.audioCtx.resume();
-      }
-
-      if (!this.synthMasterGain) {
-        this.synthMasterGain = this.audioCtx.createGain();
-        this.synthMasterGain.connect(this.audioCtx.destination);
-      }
-
-      const now = this.audioCtx.currentTime;
-      const osc = this.audioCtx.createOscillator();
-      const oscHarmonic = this.audioCtx.createOscillator();
-      const oscSub = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      const filter = this.audioCtx.createBiquadFilter();
-
-      // Soft music box bell timbre: fundamental sine + soft triangle overtone
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now);
-
-      oscHarmonic.type = 'triangle';
-      oscHarmonic.frequency.setValueAtTime(freq * 2, now);
-
-      oscSub.type = 'sine';
-      oscSub.frequency.setValueAtTime(freq * 0.5, now);
-
-      // Warm low-pass filter
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(2600, now);
-      filter.Q.setValueAtTime(1.2, now);
-
-      // Gentle chime envelope
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(gainValue * this.volume, now + 0.035);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-      osc.connect(gain);
-      oscHarmonic.connect(gain);
-      if (freq > 300) {
-        oscSub.connect(gain);
-      }
-
-      gain.connect(filter);
-      filter.connect(this.synthMasterGain);
-
-      // Track active oscillators for immediate cleanup
-      const tracked1 = { osc, gain };
-      const tracked2 = { osc: oscHarmonic, gain };
-      this.activeOscillators.add(tracked1);
-      this.activeOscillators.add(tracked2);
-
-      osc.onended = () => {
-        this.activeOscillators.delete(tracked1);
-      };
-      oscHarmonic.onended = () => {
-        this.activeOscillators.delete(tracked2);
-      };
-
-      osc.start(now);
-      oscHarmonic.start(now);
-      if (freq > 300) {
-        const tracked3 = { osc: oscSub, gain };
-        this.activeOscillators.add(tracked3);
-        oscSub.onended = () => {
-          this.activeOscillators.delete(tracked3);
-        };
-        oscSub.start(now);
-        oscSub.stop(now + duration + 0.1);
-      }
-
-      osc.stop(now + duration + 0.1);
-      oscHarmonic.stop(now + duration + 0.1);
-    } catch {
-      // Ignore audio glitch
-    }
-  }
-
-  private startSynth() {
-    // Never start synth if custom track is active
-    if (this.isCustom) return;
-
-    this.initAudioContext();
-    this.stopSynth();
-
-    if (!this.audioCtx) return;
-
-    this.synthMasterGain = this.audioCtx.createGain();
-    this.synthMasterGain.connect(this.audioCtx.destination);
-
-    this.usingSynth = true;
-    this.isPlaying = true;
-    this.notify();
-
-    // Sweet romantic melody combining Happy Birthday motif with acoustic chords
-    const melody = [
-      // Section A: Romantic arpeggio
-      { freq: 261.63, dur: 2.4, bass: true }, // C4
-      { freq: 523.25, dur: 1.2 },             // C5
-      { freq: 659.25, dur: 1.2 },             // E5
-      { freq: 783.99, dur: 1.8 },             // G5
-      { freq: 659.25, dur: 1.0 },             // E5
-
-      { freq: 196.00, dur: 2.4, bass: true }, // G3
-      { freq: 392.00, dur: 1.2 },             // G4
-      { freq: 493.88, dur: 1.2 },             // B4
-      { freq: 587.33, dur: 1.8 },             // D5
-      { freq: 493.88, dur: 1.0 },             // B4
-
-      { freq: 220.00, dur: 2.4, bass: true }, // A3
-      { freq: 440.00, dur: 1.2 },             // A4
-      { freq: 523.25, dur: 1.2 },             // C5
-      { freq: 659.25, dur: 1.8 },             // E5
-      { freq: 587.33, dur: 1.0 },             // D5
-
-      { freq: 174.61, dur: 2.4, bass: true }, // F3
-      { freq: 349.23, dur: 1.2 },             // F4
-      { freq: 440.00, dur: 1.2 },             // A4
-      { freq: 523.25, dur: 1.8 },             // C5
-      { freq: 493.88, dur: 1.0 },             // B4
-
-      // Section B: Happy Birthday Phrase
-      { freq: 261.63, dur: 0.8 },             // C4
-      { freq: 261.63, dur: 0.8 },             // C4
-      { freq: 293.66, dur: 1.4 },             // D4
-      { freq: 261.63, dur: 1.4 },             // C4
-      { freq: 349.23, dur: 1.4 },             // F4
-      { freq: 329.63, dur: 2.2, bass: true }, // E4
-
-      { freq: 261.63, dur: 0.8 },             // C4
-      { freq: 261.63, dur: 0.8 },             // C4
-      { freq: 293.66, dur: 1.4 },             // D4
-      { freq: 261.63, dur: 1.4 },             // C4
-      { freq: 392.00, dur: 1.4 },             // G4
-      { freq: 349.23, dur: 2.2, bass: true }, // F4
-
-      { freq: 261.63, dur: 0.8 },             // C4
-      { freq: 261.63, dur: 0.8 },             // C4
-      { freq: 523.25, dur: 1.6 },             // C5
-      { freq: 440.00, dur: 1.4 },             // A4
-      { freq: 349.23, dur: 1.4 },             // F4
-      { freq: 329.63, dur: 1.4 },             // E4
-      { freq: 293.66, dur: 2.0 },             // D4
-
-      { freq: 466.16, dur: 0.8 },             // Bb4
-      { freq: 466.16, dur: 0.8 },             // Bb4
-      { freq: 440.00, dur: 1.4 },             // A4
-      { freq: 349.23, dur: 1.4 },             // F4
-      { freq: 392.00, dur: 1.4 },             // G4
-      { freq: 349.23, dur: 2.6, bass: true }, // F4
-    ];
-
-    const tick = () => {
-      if (!this.isPlaying || !this.usingSynth || this.isCustom) {
-        this.stopSynth();
-        return;
-      }
-
-      const note = melody[this.step % melody.length];
-      const gain = note.bass ? 0.22 : 0.16;
-      this.playChime(note.freq, note.dur, gain);
-
-      this.step = (this.step + 1) % melody.length;
-      this.synthTimer = window.setTimeout(tick, 480);
-    };
-
-    tick();
   }
 
   /**
